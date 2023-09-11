@@ -1,0 +1,132 @@
+---
+title: "Lista 1 TRI"
+author: "Davi Wentrick Feijó - 200016806"
+date: "2023-09-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+pacman::p_load(tidyverse,kableExtra,irtoys,ltm,mirt)
+
+altura <- read.fwf(file="altura211.txt", widths=c(3,4,rep(1,14)),dec=',')
+
+# insere nomes nas colunas
+colnames(altura) <- c("id","altura",paste(c("i"),1:14,sep=""))
+altura.itens <- altura[,3:16] # utilizando apenas as colunas de respostas
+altura.desc <- descript(altura.itens)
+```
+
+### Questao 1 
+
+Com base nos coeficientes estudados, você vê algum item que deva ser descartado? Justifique sua resposta.
+```{r}
+# Questao 1
+
+# correlação ponto-bisserial
+rho.PB <- altura.desc$bisCorr
+
+# correlação bisserial
+rho.B.vec <- rep(0,14)
+
+for (i in 1:14) {
+  pp <- colSums(altura.itens)[i]/nrow(altura.itens)
+  rho.B <- sqrt(pp*(1-pp))*altura.desc$bisCorr[i]/dnorm(qnorm(pp,0,1),0,1)
+  rho.B.vec[i] <- rho.B
+}
+kable(data.frame(rho.PB, rho.B.vec), 
+      col.names = c("Ponto-bisserial", "Bisserial"), align = "c")
+```
+
+Como todos os valores obtidos sao positivos, nao temos indicios de que tenhamos que remover nenhums dos items
+
+### Questao 2
+
+Itens com valores maiores para o coeficiente de correlaçao ponto-bisserial tendem a apresentar maiores valores também para o coeficiente de correlaçaõo bisserial? Apresente um diagrama dedispersão com os valores dos dois coeficientes para os 14 itens.
+```{r}
+# Questao 2 
+
+plot(altura.desc$bisCorr, rho.B.vec, xlab=c("correlação ponto bisserial"),
+     ylab=c("correlação bisserial"),xlim=c(0,1),ylim=c(0,1))
+abline(0,1)
+```
+
+Pelo gráfico podemos notar que existe uma correlacao positiva entre as duas medidas
+
+### Questao 3
+
+Uma alternativa para o escore total como medida de proficiência (altura, neste caso) seria o escore padronizado $Z_j =(T_j -T^{-})/S_T,j=1,…,n$.
+
+- A partir dos valores do escore padronizado, obtenha uma estimativa da altura de cada indivíduo com a mesma média e desvio-padrão das alturas reais, isto é  $Hj = \mu + \sigma Z_j , j = 1, . . . , n$, sendo \mu a altura média real e \sigma o desvio-padrão da alturas reais.
+
+- Calcule a correlação entre as alturas reais e estimadas.
+
+- Elabore um diagrama de dispersão com as alturas reais e estimadas.
+```{r}
+# Questao 3 
+
+mu <- mean(altura$altura)
+desvio <- sd(altura$altura)
+
+t <- apply(altura.itens,1,sum)
+t_media <- mean(t)
+s <- sd(t)
+
+## escore padronizado 
+zj <- (t-t_media)/s
+
+## altura estimada
+hj <- mu + desvio*zj
+
+## correlação entre alturas reais e estimadas
+
+(cor(altura$altura, hj))
+
+plot(altura$altura, hj, xlab=c("altura real"),
+     ylab=c("estimada"))
+```
+
+
+### Questao 4 
+
+Com base no coeficiente α de Cronbach, a consistência interna do questionário é satisfatória?
+
+```{r}
+# Questao 4
+
+cronbach.alpha(altura.itens)
+```
+Como o valor obtido foi acima de 0.7 podemos dizer que está consistente
+
+### Questao 5
+
+Quais os itens com o menor e o maior índice de dificuldade?
+
+```{r}
+# Questao 5
+
+(1-apply(altura.itens,2,sum)/nrow(altura.itens))
+```
+
+Podemos notar que o item 8 é o mais dificil e o item 9 é o mais facil
+
+### Questao 6
+
+Quais itens apresentam maior índice de discriminação entre indivíduos altos e baixos?
+
+```{r}
+# Questao 6
+
+escore <- apply(altura.itens,1,sum)
+aux <- ceiling(0.27*nrow(altura.itens))
+escore.inf <- sort(escore)[aux]
+escore.sup <- sort(escore)[nrow(altura.itens)-aux]
+
+altura.inf <- altura.itens[escore<=escore.inf,]
+altura.sup <- altura.itens[escore>=escore.sup,]
+
+apply(altura.sup,2,sum)/nrow(altura.sup)-apply(altura.inf,2,sum)/nrow(altura.inf)
+```
+
+Os itens 10, 7 e 14 apresentam os maiores indices de discriminação.
