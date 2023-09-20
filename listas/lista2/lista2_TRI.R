@@ -87,3 +87,5 @@ t2$p.Y <- mat.par.2$c + (1-mat.par.2$c)/(1+exp(-mat.par.2$a*(theta.Y-mat.par.2$b
 t2$dif <- t2$p.Z - t2$p.Y
 
 kable(t1, align = "c", col.names = c("Item", "p.Z", "p.Y", "Dif"))
+
+kable(t2, align = "c", col.names = c("Item", "p.Z", "p.Y", "Dif"))
