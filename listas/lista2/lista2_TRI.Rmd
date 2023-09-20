@@ -1,3 +1,13 @@
+---
+title: "Lista 2 TRI"
+author: "Davi Wentrick Feijó - 200016806"
+date: "2023-09-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
 pacman::p_load(tidyverse,reshape2, knitr)
 
 mat.par.1 <- data.frame("a" = c(1.8, .7, 1.8, 1.2, 1.2, .5),
@@ -10,7 +20,15 @@ theta <- seq(-4,4,0.01)
 
 mat.prob1 <- mat.prob2 <- data.frame(theta)
 
-# Gráfico das CCI"s para o teste 1 
+```
+
+
+#### Questão 1
+
+##### a) Construa um gráfico para cada teste com as curvas caracteŕısticas dos itens (CCI).
+
+```{r}
+# Gráfico das CCI"s para o teste 1
 
 for (i in 1:nrow(mat.par.1)) {
   mat.prob1[paste("i", i, sep = "")] <-  mat.par.1$c[i] + (1-mat.par.1$c[i])/
@@ -23,8 +41,10 @@ for (i in 1:nrow(mat.par.2)) {
   mat.prob2[paste("i", i, sep = "")] <-  mat.par.2$c[i] + (1-mat.par.2$c[i])/
     (1+exp(-mat.par.2$a[i]*(theta-mat.par.2$b[i])))
 }
+```
 
 
+```{r}
 mat.prob1$teste <- "Teste 1"
 mat.prob2$teste <- "Teste 2"
 
@@ -33,13 +53,30 @@ rbind(mat.prob1, mat.prob2) %>%
   ggplot(aes(theta, value, color = variable)) + geom_line() +
   facet_wrap(~teste) +
   labs(color = "Item") + theme_bw()
+```
 
-# d) 
+
+##### b) Qual o item mais fácil de cada teste? Justifique
+
+No Primeiro teste seria o item 6 e no segundo seria o item 3 pois ele apresenta maior chance de acerto entre pessoas com pouca proficiencia.
+
+##### c) Qual o item que menos discrimina em cada teste? Justifique sua resposta.
+
+Acredito que em ambos os testes seria o item 2 pois é o que apresentaa curva mais linear entre as proficiencias dificultanto a discriminação
+
+##### d) Qual o item em cada teste para o qual um indivíduo com proficiência igual a 0 tem a maior probabilidade de acerto ?
+
+```{r}
 vec.prob.1 <- mat.par.1[,3] + (1-mat.par.1[,3])/(1+exp(-mat.par.1[,1]*(0-mat.par.1[,2])))
 vec.prob.1 
 vec.prob.2 <- mat.par.2[,3] + (1-mat.par.2[,3])/(1+exp(-mat.par.2[,1]*(0-mat.par.2[,2])))
 vec.prob.2 
+```
 
+
+#### Questão 2) Elabore um unico gráfico com a função de informação (FIT) de cada um dos dois testes.
+
+```{r}
 # Questão 2
 
 mat.prob <- mat.prob.dif <- mat.info <- matrix(0,nrow(mat.par.1),length(theta))
@@ -71,6 +108,16 @@ info.2 <- apply(mat.info,2,sum)
 lines(theta,info.2,lty=2)
 legend(-4,1.5,c("Teste 1", "Teste 2"), lty=c(1,2))
 
+```
+
+
+#### Questão 3) Com base nos gráficos das FIT’s, qual dos testes você escolheria para estimar as proficiências no intervalo [0, 2]. Justitique sua resposta.
+
+O teste 1 nesse intervalo é o mais ideal pois aprenseta maior informacao sobre a proficiencia
+
+#### Questao 4) Considerando os níıveis de proficiência −1 e 1, existe algum item âcora para o níıvel 1. Considere os dois testes.
+
+```{r}
 # Questao 4
 
 theta.Z <- 1
@@ -87,3 +134,21 @@ t2$p.Y <- mat.par.2$c + (1-mat.par.2$c)/(1+exp(-mat.par.2$a*(theta.Y-mat.par.2$b
 t2$dif <- t2$p.Z - t2$p.Y
 
 kable(t1, align = "c", col.names = c("Item", "p.Z", "p.Y", "Dif"))
+
+kable(t2, align = "c", col.names = c("Item", "p.Z", "p.Y", "Dif"))
+
+```
+
+
+Para um item ser uma ancora é necessario que p.Z > 0.65, p.Y < 0.5 e a diferenca > 0.30. Logo sabemos que os items 4 e 5 do teste 1 satifazem isso. Enquanto que no teste 2 seriam o item 4.
+
+
+
+
+
+
+
+
+
+
+

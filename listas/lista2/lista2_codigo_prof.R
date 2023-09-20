@@ -1,38 +1,37 @@
-pacman::p_load(tidyverse,reshape2, knitr)
 
-mat.par.1 <- data.frame("a" = c(1.8, .7, 1.8, 1.2, 1.2, .5),
-                        "b" = c(1, 1, 1, -.5, .5, 0),
-                        "c" = c(0.2, 0.2, .25, .2, 0.25, .25))
-mat.par.2 <- data.frame("a" = c(2, .5, 1.5, 1.3, 1.1, .7), 
-                        "b" = c(-1, 1, -1.5, .5, 1.5, 2), 
-                        "c" = c(0.2, 0.2, .25, .2, 0.25, .25))
+
+mat.par.1 <- matrix(c(1.8, .7, 1.8, 1.2, 1.2, .5, 1, 1, 1, -.5, .5, 0, 0.2, 0.2, .25, .2, 0.25, .25),nrow=6)
+mat.par.2 <- matrix(c(2, .5, 1.5, 1.3, 1.1, .7, -1, 1, -1.5, .5, 1.5, 2, 0.2, 0.2, .25, .2, 0.25, .25),nrow=6)
+
 theta <- seq(-4,4,0.01)
 
-mat.prob1 <- mat.prob2 <- data.frame(theta)
+# Questão 1
 
-# Gráfico das CCI"s para o teste 1 
+mat.prob <- matrix(0,nrow(mat.par.1),length(theta))
+
+# Gráfico das CCI's para o teste 1 
 
 for (i in 1:nrow(mat.par.1)) {
-  mat.prob1[paste("i", i, sep = "")] <-  mat.par.1$c[i] + (1-mat.par.1$c[i])/
-    (1+exp(-mat.par.1$a[i]*(theta-mat.par.1$b[i])))
+  for (j in 1:length(theta))
+    mat.prob[i,j] <- mat.par.1[i,3] + (1-mat.par.1[i,3])/(1+exp(-mat.par.1[i,1]*(theta[j]-mat.par.1[i,2])))
 }
 
-# Gráfico das CCI"s para o teste 2
+plot(theta,mat.prob[1,],type="l",ylim=c(0,1))
+for (i in 2:nrow(mat.par.1))
+  lines(theta,mat.prob[i,],lty=i)
+legend(-4,1,c("Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6"), lty=c(1:6))
+
+# Gráfico das CCI's para o teste 2
 
 for (i in 1:nrow(mat.par.2)) {
-  mat.prob2[paste("i", i, sep = "")] <-  mat.par.2$c[i] + (1-mat.par.2$c[i])/
-    (1+exp(-mat.par.2$a[i]*(theta-mat.par.2$b[i])))
+  for (j in 1:length(theta))
+    mat.prob[i,j] <- mat.par.2[i,3] + (1-mat.par.2[i,3])/(1+exp(-mat.par.2[i,1]*(theta[j]-mat.par.2[i,2])))
 }
 
-
-mat.prob1$teste <- "Teste 1"
-mat.prob2$teste <- "Teste 2"
-
-rbind(mat.prob1, mat.prob2) %>% 
-  melt(id.vars = c("theta", "teste")) %>%
-  ggplot(aes(theta, value, color = variable)) + geom_line() +
-  facet_wrap(~teste) +
-  labs(color = "Item") + theme_bw()
+plot(theta,mat.prob[1,],type="l",ylim=c(0,1))
+for (i in 2:nrow(mat.par.2))
+  lines(theta,mat.prob[i,],lty=i)
+legend(-4,1,c("Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6"), lty=c(1:6))
 
 # d) 
 vec.prob.1 <- mat.par.1[,3] + (1-mat.par.1[,3])/(1+exp(-mat.par.1[,1]*(0-mat.par.1[,2])))
@@ -76,14 +75,20 @@ legend(-4,1.5,c("Teste 1", "Teste 2"), lty=c(1,2))
 theta.Z <- 1
 theta.Y <- -1
 
-t1 <- t2 <- data.frame("i" = 1:6)
+for (i in 1:6) {
+  print(i)
+  p.Z <- mat.par.1[i,3] + (1-mat.par.1[i,3])/(1+exp(-mat.par.1[i,1]*(theta.Z-mat.par.1[i,2])))
+  print(p.Z)
+  p.Y <- mat.par.1[i,3] + (1-mat.par.1[i,3])/(1+exp(-mat.par.1[i,1]*(theta.Y-mat.par.1[i,2])))
+  print(p.Y)
+  print(p.Z-p.Y)
+}
 
-t1$p.Z <- mat.par.1$c + (1-mat.par.1$c)/(1+exp(-mat.par.1$a*(theta.Z-mat.par.1$b)))
-t1$p.Y <- mat.par.1$c + (1-mat.par.1$c)/(1+exp(-mat.par.1$a*(theta.Y-mat.par.1$b)))
-t1$dif <- t1$p.Z - t1$p.Y
-
-t2$p.Z <- mat.par.2$c + (1-mat.par.2$c)/(1+exp(-mat.par.2$a*(theta.Z-mat.par.2$b)))
-t2$p.Y <- mat.par.2$c + (1-mat.par.2$c)/(1+exp(-mat.par.2$a*(theta.Y-mat.par.2$b)))
-t2$dif <- t2$p.Z - t2$p.Y
-
-kable(t1, align = "c", col.names = c("Item", "p.Z", "p.Y", "Dif"))
+for (i in 1:6) {
+  print(i)
+  p.Z <- mat.par.2[i,3] + (1-mat.par.2[i,3])/(1+exp(-mat.par.2[i,1]*(theta.Z-mat.par.2[i,2])))
+  print(p.Z)
+  p.Y <- mat.par.2[i,3] + (1-mat.par.2[i,3])/(1+exp(-mat.par.2[i,1]*(theta.Y-mat.par.2[i,2])))
+  print(p.Y)
+  print(p.Z-p.Y)
+}
