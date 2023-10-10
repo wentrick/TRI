@@ -1,0 +1,138 @@
+---
+title: "Lista 3 TRI"
+author: "Davi Wentrick Feijó - 200016806"
+date: "2023-10-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Pacotes
+pacman::p_load(tidyverse,reshape2,knitr,irtoys,ltm,mirt)
+```
+
+```{r echo=FALSE}
+altura <- read.fwf(file="altura211.txt", widths=c(3,4,rep(1,14)),dec=',')
+
+no.item <- ncol(altura[, 3:16])
+theta   <- seq(-4, 4, 0.01)
+```
+
+
+#### 1) Ajuste o modelo logístico de dois parâmetros aos dados.
+
+```{r}
+# modelo ajustado
+altura.tpm <- tpm(altura[,3:16],constraint=cbind(1:no.item,1,0))
+
+### A funcao "coef" fornece as estimativas dos parametros dos itens.
+
+par.est <- coef(altura.tpm) # cc, bb, aa
+
+ml2 <- data.frame("i" = 1:14, par.est[, 2], par.est[, 3])
+rownames(ml2) <- NULL
+
+kable(ml2, col.names = c("Item", "Dificuldade", "Discriminação"), align = "c")
+```
+
+
+#### 2) Construa um gráfico com as curvas características dos 14 itens.
+
+```{r}
+df <- data.frame(theta)
+
+for (i in 1:no.item) {
+  col <- paste("i", i, sep = "")
+  df[col] <- 1/(1+exp(-par.est[i, 3]*(theta-par.est[i, 2])))
+}
+
+melt(df, id.vars = "theta") %>%
+  ggplot(aes(theta, value, color = variable)) + geom_line() +
+  labs(color = "Item", x = "theta") +
+  theme_bw()
+```
+
+#### 3) Calcule as funções de informação dos itens e construa um gráfico com estas funções.
+
+```{r}
+mat.prob <- mat.prob.dif <- mat.info <- data.frame(theta)
+
+for (i in 1:no.item) {
+  col <- paste("i", i, sep = "")
+  mat.prob[col] <- par.est[i, 1] + 
+    (1-par.est[i,1])/(1+exp(-par.est[i, 3]*(theta-par.est[i, 2])))
+  mat.prob.dif[col] <- par.est[i, 3]*(1-par.est[i, 1])*exp(-par.est[i, 3]*(theta-par.est[i, 2]))/((1+exp(-par.est[i, 3]*(theta-par.est[i, 2])))^2)
+  mat.info[col] <- (mat.prob.dif[col]^2)/(mat.prob[col]*(1-mat.prob[col]))
+}
+
+mat.info %>%
+  melt(id.vars = "theta") %>%
+  ggplot(aes(theta, value, color = variable)) + geom_line() +
+  labs(color = "Item", y = "Informação") +
+  theme_bw()
+```
+
+#### 4) Quais itens são mais adequados para a estimação da altura de pessoas baixas?
+
+Com base no gráfico de funções de informações dos itens, nota-se que os ítens 7 e 10 são os mais adequados para estimação da altura de pessoas baixas, ja que posssuem um alto nível de informação para pessoas de proficiência (theta) baixos.
+
+
+#### 5) Calcule e esboce em um gráfico a função de informação do teste. Este teste é adequado para a estimação de pessoas com baixa estatura?
+
+```{r}
+mat.info$info <- rowSums(mat.info[-1])
+
+ggplot(mat.info, aes(theta, info)) + geom_line() +
+  geom_vline(xintercept = 0, color = "red") +
+  labs(y = "Informação") +
+  theme_bw()
+```
+
+Analisando o gráfico apresentado, podemos observar que o ponto de pico da informação está localizado próximo a zero, o que indica que o teste é altamente informativo para estimar proficiências que se aproximam do nível de dificuldade das questões. Portanto, podemos concluir que o teste é apropriado para avaliar indivíduos com habilidades próximas ao nível de dificuldade das questões.
+
+#### 6) As alturas estimadas via modelo logístico de dois parâmetros estão na escala (0,1), i.e., com média 0 e desvio-padrão 1. Converta as alturas estimadas para a escala com média e desvio-padrão iguais à altura média e desvio-padrão reais, respectivamente.
+
+```{r}
+theta.est.eap <- eap(altura[3:16], 
+                     cbind(par.est[, 3], par.est[, 2], par.est[, 1]),
+                     qu = normal.qu())
+
+theta.est <- mean(altura[, 2]) + sd(altura[, 2])*theta.est.eap[, 1]
+
+ggplot(NULL, aes(altura[, 2], theta.est)) + 
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red") +
+  labs(x = "Altura real", y = "Altura estimada") +
+  theme_bw()
+```
+
+
+
+#### 7) Compare graficamente (e atraves do coeficiente de correlacao) as alturas reais e as alturas estimadas.
+
+```{r}
+(cc <- cor(altura[, 2],theta.est))
+```
+
+Com base na análise anterior, é evidente que as estimativas de altura são consistentes e não apresentam uma distância significativa em relação aos valores reais. Além disso, o coeficiente de correlação indica uma forte e positiva relação entre os valores reais e as estimativas.
+
+#### 8) Calcule o escore padronizado e converta as alturas estimadas para a escala com média e desvio padrão iguais à altura média e desvio-padrão reais, respectivamente (isto já foi feito na primeira lista de exercícios). Compare grafi camente (e através do coeficiente de correlação) as alturas estimadas via escore padronizado transformado e via ajuste do modelo logístico de dois parâmetros.
+
+```{r}
+escore <- apply(altura[, 3:16],1,sum)
+escore.padr <- (escore-mean(escore))/sd(escore)
+theta.est.tct <- mean(altura[, 2]) + sd(altura[, 2])*escore.padr
+
+ggplot(NULL, aes(theta.est.tct, theta.est)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red") +
+  labs(x = "Altura estimada via TCT", y = "Altura estimada via TRI") +
+  theme_bw()
+```
+
+```{r}
+(cc <- cor(theta.est.tct,theta.est))
+```
+
+Observa-se que os métodos fornecem estimativas semelhantes, já que os pontos tendem a se aproximar da reta e o coeficiente de correlação exibe um valor elevado, aproximando-se de 1.
