@@ -1,0 +1,142 @@
+---
+title: "Resumo TRI"
+author: "Davi Wentrick Feijó - 200016806"
+date: "2023-10-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Pacotes
+pacman::p_load(tidyverse,reshape2,knitr,irtoys,ltm,mirt)
+```
+
+
+### Teoria Clássica dos Testes
+
+A Teoria Clássica dos Testes (TCT) é uma abordagem que visa medir traços latentes, que são características de indivíduos que nao podem se medir diretamente, como níveis de conhecimento ou depressão. Nessa teoria, a medida de proficiência de um indivíduo é baseada no escore total do teste aplicado a ele, vale notar que o escore de um indivíduo é o total de itens para os quais ele(a) forneceu resposta positiva. No entanto, a TCT apresenta limitações, incluindo a dependência da medida de proficiência em relação ao teste específico aplicado e dos parâmetros dos itens em relação ao grupo de respondentes.
+
+A TCT envolve a análise dos itens do teste e do instrumento de medida como um todo. Ela se concentra na pontuação geral do teste como a medida do traço latente. Isso significa que diferentes testes podem levar a estimativas diferentes da proficiência de um indivíduo, mesmo que o traço latente seja o mesmo. Além disso, os parâmetros dos itens, como dificuldade e discriminação, podem variar dependendo do grupo de respondentes.
+
+Em resumo, a TCT é uma abordagem tradicional para medir traços latentes, mas apresenta limitações relacionadas à dependência do teste específico e aos parâmetros dos itens em relação aos grupos de respondentes. 
+
+Temos dois tipos possiveis de questoes em um teste:
+
++ Dicotômicos (respostas binárias, como sim ou não) 
+
++ Politômicos (questões de múltipla escolha, onde a escolha influencia na estimativa do traço latente). Por exemplo, em um questionário para avaliar o nível de depressão, um item poderia ser: "Você se sente triste: ( ) nunca; ( ) de vez em quando; ( ) com frequência; ( ) sempre", com as alternativas em uma escala ordinal que indica o grau crescente de depressão.
+
+```{r echo=FALSE, warning=FALSE}
+altura <- read.fwf(file="altura211.txt", widths=c(3,4,rep(1,14)),dec=',')
+
+# insere nomes nas colunas
+colnames(altura) <- c("id","altura",paste(c("i"),1:14,sep=""))
+
+head(altura)
+```
+
+Para realizar o calculo de algumas estatisticas descritivas vamos usar a função `descript()` do pacote `ltm` que faz esse calculo usando os dados de questionario com respostas dicotomicas ou politomicas.
+
+```{r}
+altura.itens <- altura[,3:16] # utilizando apenas as colunas de respostas
+altura.desc <- descript(altura.itens)
+```
+
+#### Coeficiente de correlação ponto-bisserial
+
+O coeficiente de correlação ponto-bisserial é calculado entre a variável indicadora de respostas positivas para um item e os escores dos indivíduos. Idealmente, esperamos que todos os itens tenham valores positivos para esse coeficiente, o que indica que as respostas positivas aumentam à medida que os escores dos indivíduos aumentam.
+
+Se um item apresentar um valor negativo para o coeficiente ponto-bisserial, isso sugere uma inconsistência entre os escores dos indivíduos e suas respostas para o item. Isso significa que o item mostra uma tendência de obter mais respostas positivas de indivíduos com escores baixos, em vez de escores altos, o que é incoerente. Nesse caso, geralmente é recomendado remover ou reformular o item, pois ele não está medindo adequadamente o traço latente que se pretende avaliar com o teste (questionário).
+
+```{r}
+rho.PB <- altura.desc$bisCorr
+```
+
+```{r echo=FALSE}
+rho.PB
+```
+
+
+
+#### Coeficiente de correlação bisserial
+
+O coeficiente de correlação bisserial é uma medida de associação entre uma
+variável dicotomizada e uma variável contínua (não observada) associada ao
+construto (traço latente). Tem a mesma interpretação da correlação ponto-bisserial.
+
+```{r}
+# correlação bisserial
+rho.B.vec <- rep(0,14)
+
+for (i in 1:14) {
+  pp <- colSums(altura.itens)[i]/nrow(altura.itens)
+  rho.B <- sqrt(pp*(1-pp))*altura.desc$bisCorr[i]/dnorm(qnorm(pp,0,1),0,1)
+  rho.B.vec[i] <- rho.B
+}
+```
+
+Vamos montar uma tabela com os resultados do ponto-bisserial e bisserial
+
+```{r echo=FALSE}
+kable(data.frame(rho.PB, rho.B.vec), 
+      col.names = c("Ponto-bisserial", "Bisserial"), align = "c")
+```
+
+#### Alfa de Cronbach
+
+O coeficiente \alfa de Cronbach é usado para avaliar a consistência interna de um instrumento de medida, com valores normalmente variando de 0 a 1. Um valor mínimo aceitável para \alfa é 0,70, indicando que a consistência interna dos itens é considerada baixa se estiver abaixo desse limite. O valor 1-pi pode ser usado como um índice de dificuldade do item.
+
+```{r}
+cronbach.alpha(altura.itens)
+```
+
+Indice de dificuldade do item:
+
+É o calculo do total de respostas positivas por item dividido pelo total de respondentes, que vai ser a probabilidade de acerto, menos 1 que nao dara o numero de erros ou resposta negativa.
+
+```{r}
+(1-apply(altura.itens,2,sum)/nrow(altura.itens))
+```
+
+
+
+Além disso, na Teoria Clássica dos Testes (TCT), há o Índice de Discriminação do Item, que é calculado pela diferença entre a proporção de respostas positivas para o item no grupo superior (27% dos respondentes com os escores mais altos) e a proporção no grupo inferior (27% dos respondentes com os escores mais baixos), variando de -1 a 1. Isso ajuda a entender como o item diferencia entre os grupos de desempenho.
+
+```{r}
+escore <- apply(altura.itens,1,sum)
+aux <- ceiling(0.27*nrow(altura.itens))
+escore.inf <- sort(escore)[aux]
+escore.sup <- sort(escore)[nrow(altura.itens)-aux]
+
+altura.inf <- altura.itens[escore<=escore.inf,]
+altura.sup <- altura.itens[escore>=escore.sup,]
+
+apply(altura.sup,2,sum)/nrow(altura.sup)-apply(altura.inf,2,sum)/nrow(altura.inf)
+```
+
+
+Por fim, menciona-se o erro padrão de medida, que é uma medida de precisão do teste, indicando o quão confiavelmente o teste mede o traço latente que se pretende avaliar.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
