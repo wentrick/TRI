@@ -49,6 +49,16 @@ O coeficiente de correlação ponto-bisserial é calculado entre a variável ind
 
 Se um item apresentar um valor negativo para o coeficiente ponto-bisserial, isso sugere uma inconsistência entre os escores dos indivíduos e suas respostas para o item. Isso significa que o item mostra uma tendência de obter mais respostas positivas de indivíduos com escores baixos, em vez de escores altos, o que é incoerente. Nesse caso, geralmente é recomendado remover ou reformular o item, pois ele não está medindo adequadamente o traço latente que se pretende avaliar com o teste (questionário).
 
+$$
+\rho_{i}^{PB} = \left( \frac{\bar T_A - \bar T}{S_T} \right) \sqrt{\frac{P_i}{1-P_i}}
+$$
+Onde:
+
++ $\bar T$ é o escore médio dos respondentes 
++ $\bar T$ é o escore médio dos respondentes com resposta positiva (1) para o i-ésimo item
++ $S_T$ é o desvio padrao dos escores
++ $P_i$ é a proporcao de respostas positivas para o i-esimo item
+
 ```{r}
 rho.PB <- altura.desc$bisCorr
 ```
@@ -87,11 +97,19 @@ kable(data.frame(rho.PB, rho.B.vec),
 
 O coeficiente \alfa de Cronbach é usado para avaliar a consistência interna de um instrumento de medida, com valores normalmente variando de 0 a 1. Um valor mínimo aceitável para \alfa é 0,70, indicando que a consistência interna dos itens é considerada baixa se estiver abaixo desse limite. O valor 1-pi pode ser usado como um índice de dificuldade do item.
 
+$$
+\alpha = \frac{I}{I-1} \left( 1- \frac{\sum_{i=1}^{I} S^2_i}{S^2_T} \right)
+$$
+
++ $S^2_i$ é a variancia das respostas para o i-ésimo item
+
++ $S_T$ é o desvio padrao dos escores
+
 ```{r}
 cronbach.alpha(altura.itens)
 ```
 
-Indice de dificuldade do item:
+##### Indice de dificuldade do item:
 
 É o calculo do total de respostas positivas por item dividido pelo total de respondentes, que vai ser a probabilidade de acerto, menos 1 que nao dara o numero de erros ou resposta negativa.
 
@@ -100,6 +118,7 @@ Indice de dificuldade do item:
 ```
 
 
+##### Índice de Discriminação do Item
 
 Além disso, na Teoria Clássica dos Testes (TCT), há o Índice de Discriminação do Item, que é calculado pela diferença entre a proporção de respostas positivas para o item no grupo superior (27% dos respondentes com os escores mais altos) e a proporção no grupo inferior (27% dos respondentes com os escores mais baixos), variando de -1 a 1. Isso ajuda a entender como o item diferencia entre os grupos de desempenho.
 
@@ -119,7 +138,9 @@ apply(altura.sup,2,sum)/nrow(altura.sup)-apply(altura.inf,2,sum)/nrow(altura.inf
 Por fim, menciona-se o erro padrão de medida, que é uma medida de precisão do teste, indicando o quão confiavelmente o teste mede o traço latente que se pretende avaliar.
 
 
-
+$$
+EPM = S_t \sqrt{1-\alpha} \approx S_t \sqrt{\sum_{i=1}^{i}P_i(1-P_i)}
+$$
 
 
 

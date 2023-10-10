@@ -417,6 +417,20 @@ escores baixos, em vez de escores altos, o que é incoerente. Nesse caso,
 geralmente é recomendado remover ou reformular o item, pois ele não está
 medindo adequadamente o traço latente que se pretende avaliar com o
 teste (questionário).</p>
+<p><span class="math display">\[
+\rho_{i}^{PB} = \left( \frac{\bar T_A - \bar T}{S_T} \right)
+\sqrt{\frac{P_i}{1-P_i}}
+\]</span> Onde:</p>
+<ul>
+<li><span class="math inline">\(\bar T\)</span> é o escore médio dos
+respondentes</li>
+<li><span class="math inline">\(\bar T\)</span> é o escore médio dos
+respondentes com resposta positiva (1) para o i-ésimo item</li>
+<li><span class="math inline">\(S_T\)</span> é o desvio padrao dos
+escores</li>
+<li><span class="math inline">\(P_i\)</span> é a proporcao de respostas
+positivas para o i-esimo item</li>
+</ul>
 <pre class="r"><code>rho.PB &lt;- altura.desc$bisCorr</code></pre>
 <pre><code>##        i1        i2        i3        i4        i5        i6        i7        i8 
 ## 0.2469645 0.4787785 0.5458117 0.4268757 0.6221973 0.6104665 0.7003596 0.3418284 
@@ -528,6 +542,16 @@ de um instrumento de medida, com valores normalmente variando de 0 a 1.
 Um valor mínimo aceitável para é 0,70, indicando que a consistência
 interna dos itens é considerada baixa se estiver abaixo desse limite. O
 valor 1-pi pode ser usado como um índice de dificuldade do item.</p>
+<p><span class="math display">\[
+\alpha = \frac{I}{I-1} \left( 1- \frac{\sum_{i=1}^{I} S^2_i}{S^2_T}
+\right)
+\]</span></p>
+<ul>
+<li><p><span class="math inline">\(S^2_i\)</span> é a variancia das
+respostas para o i-ésimo item</p></li>
+<li><p><span class="math inline">\(S_T\)</span> é o desvio padrao dos
+escores</p></li>
+</ul>
 <pre class="r"><code>cronbach.alpha(altura.itens)</code></pre>
 <pre><code>## 
 ## Cronbach&#39;s alpha for the &#39;altura.itens&#39; data-set
@@ -535,7 +559,8 @@ valor 1-pi pode ser usado como um índice de dificuldade do item.</p>
 ## Items: 14
 ## Sample units: 211
 ## alpha: 0.826</code></pre>
-<p>Indice de dificuldade do item:</p>
+<div id="indice-de-dificuldade-do-item" class="section level5">
+<h5>Indice de dificuldade do item:</h5>
 <p>É o calculo do total de respostas positivas por item dividido pelo
 total de respondentes, que vai ser a probabilidade de acerto, menos 1
 que nao dara o numero de erros ou resposta negativa.</p>
@@ -544,6 +569,9 @@ que nao dara o numero de erros ou resposta negativa.</p>
 ## 0.6777251 0.7582938 0.7914692 0.7345972 0.8056872 0.7962085 0.4691943 0.9194313 
 ##        i9       i10       i11       i12       i13       i14 
 ## 0.3270142 0.5260664 0.5971564 0.5876777 0.7251185 0.6824645</code></pre>
+</div>
+<div id="índice-de-discriminação-do-item" class="section level5">
+<h5>Índice de Discriminação do Item</h5>
 <p>Além disso, na Teoria Clássica dos Testes (TCT), há o Índice de
 Discriminação do Item, que é calculado pela diferença entre a proporção
 de respostas positivas para o item no grupo superior (27% dos
@@ -567,6 +595,10 @@ apply(altura.sup,2,sum)/nrow(altura.sup)-apply(altura.inf,2,sum)/nrow(altura.inf
 <p>Por fim, menciona-se o erro padrão de medida, que é uma medida de
 precisão do teste, indicando o quão confiavelmente o teste mede o traço
 latente que se pretende avaliar.</p>
+<p><span class="math display">\[
+EPM = S_t \sqrt{1-\alpha} \approx S_t \sqrt{\sum_{i=1}^{i}P_i(1-P_i)}
+\]</span></p>
+</div>
 </div>
 </div>
 
