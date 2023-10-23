@@ -13,7 +13,7 @@ altura.desc <- descript(altura.itens)
 
 # correlação ponto-bisserial
 rho.PB <- altura.desc$bisCorr
-
+rho.PB
 # correlação bisserial
 rho.B.vec <- rep(0,14)
 
